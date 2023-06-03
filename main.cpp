@@ -2,6 +2,8 @@
 #include <vector>
 #include <optional>
 #include <random>
+#include <map>
+#include <string>
 
 namespace Random {
     std::random_device rd;
@@ -154,6 +156,8 @@ public:
     Player(std::string name);
     int get_score() const { return score; }
     void receives(Card& card);
+    std::string get_name() const { return name; }
+    const std::vector<Card>& get_cards() const { return cards; }
 
 private:
     std::string name;
@@ -168,20 +172,64 @@ void Player::receives(Card& card) {
     cards.push_back(card);
     score += get_value(card);
     std::cout << "his score is now " << score << '\n';
-}   
+}
+
+class Blackjack {
+public:
+    Blackjack();
+    void run();
+    void deal_card(const std::string& player);
+    bool is_over() const;
+    std::optional<Player> get_player(std::string name);
+
+private:
+    Deck deck;
+    std::map<std::string, Player> players;
+};
+
+Blackjack::Blackjack() {
+    Player dealer{ "dealer" };
+    players.insert(std::make_pair(dealer.get_name(), dealer));
+    Player player{ "player" };
+    players.insert(std::make_pair(player.get_name(), player));
+}
+
+void Blackjack::run() {
+    while (!is_over()) {
+        // game logic
+    }
+}
+
+void Blackjack::deal_card(const std::string& name) {
+    auto card = deck.draw();
+    if (card.has_value()) {
+        auto player = players.find(name);
+        if (player != players.end())
+            player->second.receives(card.value());
+        else
+            std::cout << name << " is not a player\n";
+    }
+}
+
+bool Blackjack::is_over() const {
+    return true;
+}
+
+std::optional<Player> Blackjack::get_player(std::string name) {
+    auto player = players.find(name);
+    if (player != players.end())
+        return player->second;
+    return {};
+}
 
 int main() {
-    Deck deck;
-    Player player{ "player" };
-    Player dealer{ "dealer" };
-
-    for (int i = 0; i < 55; ++i) {
-        auto card = deck.draw();
-        if (card.has_value())
-            dealer.receives(card.value());
-        card = deck.draw();
-        if (card.has_value())
-            player.receives(card.value());
+    Blackjack game;
+    game.deal_card("dealer");
+    auto dealer = game.get_player("dealer");
+    if (dealer.has_value()) {
+        for (auto card : dealer.value().get_cards())
+            std::cout << card << '\n';
     }
+
     return 0;
 }
