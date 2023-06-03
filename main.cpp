@@ -8,6 +8,9 @@
 
 #define VERBOSE
 
+const std::string dealer_name = "Dealer";
+const std::string player_name = "Player";
+
 namespace Random {
     std::random_device rd;
     std::seed_seq ss{ rd(), rd(), rd() };
@@ -140,7 +143,7 @@ Deck::Deck() {
 #ifdef VERBOSE
     std::cout << "Deck: ";
     for (auto card : cards)
-        std::cout << card << ' ';
+        std::cout << ' ' << card;
     std::cout << ".\n";
 #endif
 }
@@ -172,13 +175,11 @@ private:
 Player::Player(std::string name) : name{ name }, score{ 0 } {}
 
 void Player::receives(Card& card) {
-#ifdef VERBOSE
-    std::cout << name << " got " << card << ".\n";
-#endif
     cards.push_back(card);
     score += get_value(card);
 #ifdef VERBOSE
-    std::cout << "His score is now " << score << ".\n";
+    std::cout << name << " got " << card
+        << ". His score is now " << score << ".\n";
 #endif
 }
 
@@ -191,7 +192,6 @@ public:
     std::optional<Player> get_player(std::string name);
     int player_score() const;
     int dealer_score() const;
-    void print_score() const;
 
 private:
     Deck deck;
@@ -199,9 +199,9 @@ private:
 };
 
 Blackjack::Blackjack() {
-    Player dealer{ "dealer" };
+    Player dealer{ dealer_name };
     players.insert(std::make_pair(dealer.get_name(), dealer));
-    Player player{ "player" };
+    Player player{ player_name };
     players.insert(std::make_pair(player.get_name(), player));
 }
 
@@ -212,9 +212,9 @@ void ignore_line() {
 void Blackjack::run() {
     bool player_stand = false;
 
-    deal_card("dealer");
-    deal_card("player");
-    deal_card("player");
+    deal_card(dealer_name);
+    deal_card(player_name);
+    deal_card(player_name);
 
     if (player_score() == 21) {
         std::cout << "Blackjack!\n";
@@ -222,17 +222,15 @@ void Blackjack::run() {
     }
 
     while (!is_over()) {
-        print_score();
-
         if (!player_stand) {
             std::cout << "Draw (y/n): ";
             char answer;
             std::cin >> answer;
             ignore_line();
             if (answer == 'y') {
-                deal_card("player");
+                deal_card(player_name);
                 if (player_score() > 21) {
-                    std::cout << "Player busted!\n";
+                    std::cout << player_name << " busted!\n";
                     break;
                 }
             }
@@ -241,9 +239,9 @@ void Blackjack::run() {
             }
         }
         if (dealer_score() < player_score() || dealer_score() < 17) {
-            deal_card("dealer");
+            deal_card(dealer_name);
             if (dealer_score() > 21) {
-                std::cout << "Dealer busted!\n";
+                std::cout << dealer_name << " busted!\n";
                 break;
             }
         }
@@ -277,27 +275,15 @@ std::optional<Player> Blackjack::get_player(std::string name) {
 }
 
 int Blackjack::player_score() const {
-    return players.find("player")->second.get_score();
+    return players.find(player_name)->second.get_score();
 }
 
 int Blackjack::dealer_score() const {
-    return players.find("dealer")->second.get_score();
-}
-
-void Blackjack::print_score() const {
-    std::cout << "Dealer " << std::setw(2) << dealer_score()
-        << ' ' << std::setw(2) << player_score() << " Player\n";
+    return players.find(dealer_name)->second.get_score();
 }
 
 int main() {
     Blackjack game;
-    //game.deal_card("dealer");
-    //auto dealer = game.get_player("dealer");
-    //if (dealer.has_value()) {
-    //    for (auto card : dealer.value().get_cards())
-    //        std::cout << card << '\n';
-    //}
     game.run();
-
     return 0;
 }
